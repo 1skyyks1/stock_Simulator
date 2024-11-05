@@ -23,11 +23,11 @@
       <div class="trade">
         <span style="font-weight: bold">股票交易</span>
         <div>
-          <el-input-number v-model="buyNum" :min="1" size="small"></el-input-number>
+          <el-input-number v-model="buyNum" :min="100" size="small" step="100"></el-input-number>
           <el-button type="primary" size="small" plain @click="buy()">买入股票</el-button>
         </div>
         <div>
-          <el-input-number v-model="sellNum" :min="1" size="small"></el-input-number>
+          <el-input-number v-model="sellNum" :min="100" size="small" step="100"></el-input-number>
           <el-button type="primary" size="small" plain @click="sell()">卖出股票</el-button>
         </div>
       </div>

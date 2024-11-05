@@ -4,7 +4,20 @@
              :default-active="this.$route.path"
              mode="horizontal"
              style="font-weight: bold; font-size: 20px;"
+             class="nav-menu"
              >
+      <el-col span="24" style="margin-top: 10px; display: flex; justify-content: center; font-weight: normal; font-size: 16px;">
+        <div class="current-time">{{ currentTime.replace(/\//g, '-') }}</div>
+        <div>
+        <span
+            :style="{ color: marketStatusColor }"
+            @click="showMarketTime"
+            style="cursor: pointer;"
+        >
+          市场状态: {{ marketStatus }}
+        </span>
+        </div>
+      </el-col>
       <el-col span="8" style="display: flex; justify-content: flex-start; align-items: center; ">
         <el-menu-item index="/" style="margin-left: 2vw">home</el-menu-item>
         <el-menu-item index="/news">news</el-menu-item>
@@ -49,18 +62,6 @@
       </el-col>
 
     </el-menu>
-    <el-col span="24" style="text-align: center; margin-top: 10px;">
-      <div class="current-time">{{ currentTime.replace(/\//g, '-') }}</div>
-      <div>
-        <span
-            :style="{ color: marketStatusColor }"
-            @click="showMarketTime"
-            style="cursor: pointer;"
-        >
-          市场状态: {{ marketStatus }}
-        </span>
-      </div>
-    </el-col>
   </el-row>
 </template>
 
@@ -142,6 +143,14 @@ export default {
 
 
 <style scoped>
+.nav-menu{
+  position: fixed; /* 固定位置 */
+  top: 0; /* 距离顶部 0 */
+  left: 0; /* 距离左边 0 */
+  z-index: 1000; /* 确保菜单在最上层 */
+  width: 100%; /* 宽度占满屏幕 */
+}
+
 .el-dropdown-menu__item, .el-menu-item{
   padding: 0 30px;
 }
@@ -244,5 +253,9 @@ export default {
 .stock-name-link {
   color: #409EFF;
   cursor: pointer;
+}
+
+.current-time{
+  margin-right: 20px;
 }
 </style>

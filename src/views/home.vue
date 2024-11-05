@@ -1,11 +1,11 @@
 
 <template>
   <div v-loading.fullscreen="isLoading">
-    <nav-menu style="margin-bottom: 10px"></nav-menu>
+    <nav-menu style="margin-bottom: 15px"></nav-menu>
     <div class="search-container">
       <el-input class="search-input" v-model="searchCode" placeholder="输入股票代码"></el-input>
-      <el-input class="search-input" v-model="searchName" placeholder="输入股票名称"></el-input>
-      <el-button type="primary" @click="getStockList">搜索</el-button>
+      <el-input class="search-input-name" v-model="searchName" placeholder="输入股票名称"></el-input>
+      <el-button type="primary" @click="getStockList" plain icon="el-icon-search">搜索</el-button>
     </div>
     <div class="stock-container">
       <el-card class="stock-card" v-for="(stock, index) in stocks" :key="index" @click.native="goDetail(stock.stockId)">
@@ -106,7 +106,7 @@ export default {
 
 .stock-card {
   position: relative;
-  margin: 10px;
+  margin: 7px;
   padding-left: 15px;
   padding-right: 10px;
   width: 60%;
@@ -137,8 +137,8 @@ export default {
   }
 }
 
-.el-card__body, .el-main {
-  padding: 10px;
+/deep/ .stock-card .el-card__body{
+  padding: 15px;
 }
 
 .current-price {
@@ -175,6 +175,7 @@ export default {
 }
 
 p {
+  margin-top: 3px;
   margin-bottom: 0;
 }
 
@@ -182,26 +183,38 @@ p {
   padding-top: 5px;
 }
 
-.search-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
 .search-input {
-  width: 45%;
-  margin-right: 5%; /* 左右居中，保持两个输入框间距对称 */
+  width: 20%;
+}
+
+/deep/ .search-input .el-input__inner {
+  border-radius: 10px;
+}
+
+.search-input-name{
+  width: 65%;
+}
+
+/deep/ .search-input-name .el-input__inner {
+  border-radius: 10px;
+}
+
+.el-button{
+  border-radius: 10px;
 }
 
 .search-container {
   display: flex;
-  justify-content: center;
-  width: 50%;
-  margin: 0 auto 20px;
+  justify-content: space-between;
+  width: 60%;
+  margin: 0 auto 10px;
 }
+
 .pagination-container {
   display: flex;
   justify-content: center;
   margin-top: 20px; /* 调整空隙大小 */
+  margin-bottom: 20px;
 }
 
 </style>
