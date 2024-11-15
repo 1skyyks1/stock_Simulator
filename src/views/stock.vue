@@ -8,7 +8,9 @@
         </h2>
         <vue-kline :klineParams="klineParams" :klineData="klineData" ref="callMethods"
                    @refreshKlineData="refreshKlineData"></vue-kline>
-        <el-button type="primary" size="small" @click="showCompanyInfo">查看公司信息</el-button>
+        <div class="centered-button">
+          <el-button type="primary" size="small" @click="showCompanyInfo">查看公司信息</el-button>
+        </div>
       </div>
 
       <div class="user-info">
@@ -188,7 +190,36 @@ export default {
       this.chatMessages.push({text: this.userInput, isUser: true});
       const userMessage = this.userInput;
       this.userInput = "";
+      const stockInfoMessage = `
+    当前股票信息如下:
+    股票名称: ${this.stockInfo.stockName} (${this.stockInfo.stockCode})
+    当前股价: ${this.stockInfo.price} 元
+    市场总值: ${this.stockCompany.market} 元
+    流通市值: ${this.stockCompany.floatMarket} 元
+    总股本: ${this.stockCompany.shares} 股
+    流通股本: ${this.stockCompany.floatShares} 股
+    股票类型: ${this.stockCompany.stockType}
+  `;
 
+      // 构建历史交易数据
+      const historicalDataMessage = `
+  历史交易数据:
+  ${this.klineData.lines.slice(0, 100).map(record => `
+    日期: ${new Date(record[0]).toLocaleDateString()},
+    开盘价: ${record[1]},
+    收盘价: ${record[4]},
+    成交量: ${record[5]} 股,
+    成交金额: ${record[1] * record[5]} 元
+  `).join("\n")}
+`;
+
+      // 合并股票信息和历史交易数据
+      const fullMessage = `
+    ${stockInfoMessage}
+    ${historicalDataMessage}
+
+    用户提问: ${userMessage}
+  `;
       try {
         const response = await fetch("https://api.chatanywhere.tech/v1/chat/completions", {
           method: "POST",
@@ -198,7 +229,10 @@ export default {
           },
           body: JSON.stringify({
             model: "gpt-4",
-            messages: [{role: "user", content: userMessage}]
+                      messages: [
+                        {role: "system", content: "你是一个股票助手，能够回答用户关于当前页面的股票信息和历史交易数据问题。"},
+                        {role: "user", content: fullMessage}
+                      ]
           })
         });
         const data = await response.json();
@@ -209,6 +243,62 @@ export default {
         this.chatMessages.push({text: "助手暂时无法回复，请稍后再试。", isUser: false});
       }
     },
+  //   async sendMessage() {
+  //     this.chatMessages.push({text: this.userInput, isUser: true});
+  //     const userMessage = this.userInput;
+  //     this.userInput = "";
+  //
+  //     // 构建股票公司信息
+  //     const stockInfoMessage = `
+  //   当前股票信息如下:
+  //   股票名称: ${this.stockInfo.stockName} (${this.stockInfo.stockCode})
+  //   当前股价: ${this.stockInfo.price} 元
+  //   市场总值: ${this.stockCompany.market} 元
+  //   流通市值: ${this.stockCompany.floatMarket} 元
+  //   总股本: ${this.stockCompany.shares} 股
+  //   流通股本: ${this.stockCompany.floatShares} 股
+  //   股票类型: ${this.stockCompany.stockType}
+  // `;
+  //
+  //     // 构建历史交易数据
+  //     const historicalDataMessage = `
+  //   历史交易数据:
+  //   ${this.stockHistory.map(record => `
+  //     日期: ${record.date}, 开盘价: ${record.openPrice}, 收盘价: ${record.closePrice}, 成交量: ${record.volume} 股, 成交金额: ${record.amount} 元
+  //   `).join("\n")}
+  // `;
+  //
+  //     // 合并股票信息和历史交易数据
+  //     const fullMessage = `
+  //   ${stockInfoMessage}
+  //   ${historicalDataMessage}
+  //
+  //   用户提问: ${userMessage}
+  // `;
+  //
+  //     try {
+  //       const response = await fetch("https://api.chatanywhere.tech/v1/chat/completions", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           "Authorization": `Bearer sk-5HrY9HDaxQBx1dPDTUozf0mQ6MKwbUZlhZ8BjkRBeUia1QMb`
+  //         },
+  //         body: JSON.stringify({
+  //           model: "gpt-4",
+  //           messages: [
+  //             {role: "system", content: "你是一个股票助手，能够回答用户关于当前页面的股票信息和历史交易数据问题。"},
+  //             {role: "user", content: fullMessage}
+  //           ]
+  //         })
+  //       });
+  //
+  //       const data = await response.json();
+  //       this.chatMessages.push({text: data.choices[0].message.content, isUser: false});
+  //     } catch (error) {
+  //       console.error("Error fetching ChatGPT response", error);
+  //     }
+  //   }
+
     async buy() {
       try {
         const response=await buyStock(this.stockId, this.buyNum);
@@ -326,7 +416,10 @@ export default {
   color: blue; /* 设置股票类型为蓝色 */
   margin-left: 10px; /* 增加与股票代码的间距 */
 }
-
+.centered-button {
+  text-align: center;
+  margin-top: 20px;
+}
 
 
 </style>

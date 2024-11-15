@@ -237,9 +237,10 @@
             :label="type"
             :value="type">
         </el-option>
-        <el-option label="取消"  value=""></el-option> <!-- 取消选项 -->
+<!--        <el-option label="取消"  value=""></el-option> &lt;!&ndash; 取消选项 &ndash;&gt;-->
 
       </el-select>
+<!--      <el-button type="primary" @click="reset" plain >重置</el-button>-->
       <el-button type="primary" @click="getStockList" plain icon="el-icon-search">搜索</el-button>
     </div>
     <div class="stock-container">
@@ -312,6 +313,11 @@ export default {
       } else {
         return 'price-up';
       }
+    },
+    reset(){
+      this.searchCode="";
+      this.searchName="";
+      this.searchType="";
     },
     getStockList(resetPage = true) {
       if (resetPage) {

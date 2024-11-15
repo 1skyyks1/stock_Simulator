@@ -38,21 +38,21 @@
             </div>
 
             <!-- 交易记录 -->
-            <div class="transaction-history">
-                <h2>交易记录</h2>
-                <el-collapse>
-                    <el-collapse-item v-for="(transaction, index) in transactions" :title="transaction.stockName"
-                        :key="index">
-                        <div>
-                            <p>股票代码：{{ transaction.stockId }}</p>
-                            <p>类型: {{ showType(transaction.tradeType) }}</p>
-                            <p>价格: {{ transaction.tradePrice }}</p>
-                            <p>数量: {{ transaction.tradeQuantity }}</p>
-                            <p>交易时间: {{ transaction.tradeDate }}</p>
-                        </div>
-                    </el-collapse-item>
-                </el-collapse>
-            </div>
+<!--            <div class="transaction-history">-->
+<!--                <h2>交易记录</h2>-->
+<!--                <el-collapse>-->
+<!--                    <el-collapse-item v-for="(transaction, index) in transactions" :title="transaction.stockName"-->
+<!--                        :key="index">-->
+<!--                        <div>-->
+<!--                            <p>股票代码：{{ transaction.stockId }}</p>-->
+<!--                            <p>类型: {{ showType(transaction.tradeType) }}</p>-->
+<!--                            <p>价格: {{ transaction.tradePrice }}</p>-->
+<!--                            <p>数量: {{ transaction.tradeQuantity }}</p>-->
+<!--                            <p>交易时间: {{ transaction.tradeDate }}</p>-->
+<!--                        </div>-->
+<!--                    </el-collapse-item>-->
+<!--                </el-collapse>-->
+<!--            </div>-->
         </div>
     </div>
 </template>
