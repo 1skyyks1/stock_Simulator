@@ -3,10 +3,14 @@
     <nav-menu></nav-menu>
     <div class="stock-container">
       <div class="stock">
-        <h2 style="margin: 15px 0">{{ stockInfo.stockName }} ({{ stockInfo.stockCode }})</h2>
+        <h2 style="margin: 15px 0">{{ stockInfo.stockName }} ({{ stockInfo.stockCode }})
+          <span class="stock-type">{{ stockCompany.stockType }}</span>
+        </h2>
         <vue-kline :klineParams="klineParams" :klineData="klineData" ref="callMethods"
                    @refreshKlineData="refreshKlineData"></vue-kline>
+        <el-button type="primary" size="small" @click="showCompanyInfo">查看公司信息</el-button>
       </div>
+
       <div class="user-info">
         <el-divider content-position="left"><span style="font-size: 18px; font-weight: bold">操作</span></el-divider>
         <div class="info">
@@ -36,7 +40,21 @@
         </div>
       </div>
     </div>
-
+    <el-dialog title="公司信息" :visible.sync="dialogVisible" width="50%">
+      <div>
+        <p><strong>公司名称:</strong> {{ stockCompany.stockName }}</p>
+        <p><strong>股票类型:</strong> {{ stockCompany.stockType }}</p>
+        <p><strong>公司简介:</strong> {{ stockCompany.companyIntro }}</p>
+        <p><strong>市值:</strong> {{ stockCompany.market }}</p>
+        <p><strong>流通市值:</strong> {{ stockCompany.floatMarket }}</p>
+        <p><strong>上市日期:</strong> {{ stockCompany.listingDate }}</p>
+        <p><strong>总股本:</strong> {{ stockCompany.shares }}</p>
+        <p><strong>流通股本:</strong> {{ stockCompany.floatShares }}</p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
     <!-- ChatGPT 聊天界面 -->
     <div class="chat-container">
       <el-divider content-position="left"><span style="font-size: 18px; font-weight: bold">聊天助手</span></el-divider>
@@ -66,6 +84,7 @@ export default {
   },
   data() {
     return {
+      dialogVisible:false,
       stockId: 0,
       stockIdStr: null,
       buyNum: 1,
@@ -74,6 +93,7 @@ export default {
       klineData: {},
       stockInfo: {},
       tradeInfo: {},
+      stockCompany: {},
       klineParams: {
         width: 920,
         height: 400,
@@ -141,7 +161,13 @@ export default {
     getStockInfo() {
       stockHistory(this.stockIdStr).then(res => {
         this.stockInfo = res.data.stockSummary;
+        this.stockCompany=res.data.stockSummary.stockCompany;
+
       })
+    },
+    showCompanyInfo() {
+      // 点击查看公司信息时显示模态框
+      this.dialogVisible = true;
     },
     getInfo() {
       userStockInfo(this.stockIdStr).then(res => {
@@ -296,6 +322,11 @@ export default {
   border-radius: 5px;
   margin: 5px 0;
 }
+ .stock-type {
+  color: blue; /* 设置股票类型为蓝色 */
+  margin-left: 10px; /* 增加与股票代码的间距 */
+}
+
 
 
 </style>
