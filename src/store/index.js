@@ -17,6 +17,7 @@ export default new Vuex.Store({
         logout(state) {
             state.username = null;
             state.isLogged = false;
+            localStorage.setItem('token', "");
         }
     },
 

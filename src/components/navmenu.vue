@@ -90,7 +90,7 @@ export default {
         });
       } else {
         this.$message({
-          message: '开市时间范围: 上午9:35到11:30，下午1:05到3:00',
+          message: '开市时间范围: 工作日上午9:35到11:30，下午1:05到3:00',
           type: 'info'
         });
       }
@@ -118,9 +118,17 @@ export default {
   computed: {
     marketStatus() {
       const now = new Date();
+      const day = now.getDay(); // 获取星期几，0为星期日，1为星期一，...，6为星期六
       const hours = now.getHours();
       const minutes = now.getMinutes();
       const currentTime = hours * 60 + minutes;
+
+      // 判断是否为工作日，1到5是工作日
+      const isWeekday = day >= 1 && day <= 5;
+
+      if (!isWeekday) {
+        return "休市";
+      }
 
       const marketOpenMorning = 9 * 60 + 35;
       const marketCloseMorning = 11 * 60 + 30;
@@ -134,6 +142,7 @@ export default {
         return "休市";
       }
     },
+
     marketStatusColor() {
       return this.marketStatus === "开市" ? "red" : "blue";
     }
