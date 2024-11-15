@@ -24,11 +24,15 @@
         <span style="font-weight: bold">股票交易</span>
         <div>
           <el-input-number v-model="buyNum" :min="100" size="small" step="100"></el-input-number>
-          <el-button type="primary" size="small" plain @click="buy()">买入股票</el-button>
+          <el-button type="primary" size="small" plain @click="buy()"    @mousedown="onMouseDown"
+                     @mouseup="onMouseUp"
+                     @mouseleave="onMouseLeave"  class="custom-button">买入股票</el-button>
         </div>
         <div>
           <el-input-number v-model="sellNum" :min="100" size="small" step="100"></el-input-number>
-          <el-button type="primary" size="small" plain @click="sell()">卖出股票</el-button>
+          <el-button type="primary" size="small" plain @click="sell()"    @mousedown="onMouseDown"
+                     @mouseup="onMouseUp"
+                     @mouseleave="onMouseLeave" >卖出股票</el-button>
         </div>
       </div>
     </div>
@@ -181,24 +185,44 @@ export default {
     },
     async buy() {
       try {
-        await buyStock(this.stockId, this.buyNum);
-        this.$message.success("Stock purchase successful");
+        const response=await buyStock(this.stockId, this.buyNum);
+        if(response.code!==200){
+          this.$message({message: response.msg, type: 'warning'});
+          return;
+        }
+        this.$message.success("购买股票成功！");
         await this.getInfo();
       } catch (err) {
         console.error(err);
-        this.$message({message: 'Not enough balance', type: 'warning'});
+        this.$message({message: '交易异常！请稍后再试', type: 'warning'});
       }
     },
     async sell() {
       try {
-        await sellStock(this.stockId, this.sellNum);
-        this.$message.success("Stock purchase successful");
+        const response=await sellStock(this.stockId, this.sellNum);
+        if(response.code!==200){
+          this.$message({message: response.msg, type: 'warning'});
+          return;
+        }
+        this.$message.success("卖出股票成功！");
         await this.getInfo();
       } catch (err) {
         console.error(err);
-        this.$message({message: 'Not enough share', type: 'warning'});
+        this.$message({message: '交易异常！请稍后再试', type: 'warning'});
       }
     },
+    onMouseDown(event) {
+      // 按下按钮时，设置点击的深色
+      event.target.style.backgroundColor = '#2980b9'; // 点击时颜色
+    },
+    onMouseUp(event) {
+      // 放开按钮时恢复颜色
+      event.target.style.backgroundColor = '#409EFF'; // 恢复默认颜色
+    },
+    onMouseLeave(event) {
+      // 鼠标离开按钮时恢复颜色
+      event.target.style.backgroundColor = '#F0F0F0'; // 恢复默认颜色
+    }
   },
 }
 </script>
@@ -272,4 +296,6 @@ export default {
   border-radius: 5px;
   margin: 5px 0;
 }
+
+
 </style>
