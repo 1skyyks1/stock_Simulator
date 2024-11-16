@@ -17,6 +17,12 @@ export function stockHistory(stockId){
         method: 'GET',
     })
 }
+export function prediction(stockId){
+    return request({
+        url: '/stocks/prediction/' + stockId,
+        method: 'GET',
+    })
+}
 
 export function stockPrediction(stockId){
     return request({

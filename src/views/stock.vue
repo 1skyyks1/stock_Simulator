@@ -4,13 +4,15 @@
     <div class="stock-container">
       <div class="stock">
         <h2 style="margin: 15px 0">{{ stockInfo.stockName }} ({{ stockInfo.stockCode }})
-          <span class="stock-type">{{ stockCompany.stockType }}</span>
+          <span class="stock-type" style="font-size: 18px;" >{{ stockCompany.stockType }}</span>
+          <el-button   style="margin-left: 420px" type="primary" size="small" @click="showPrediction">查看预测信息</el-button>
+          <el-button   type="primary" size="small" @click="showCompanyInfo">查看公司信息</el-button>
         </h2>
         <vue-kline :klineParams="klineParams" :klineData="klineData" ref="callMethods"
                    @refreshKlineData="refreshKlineData"></vue-kline>
-        <div class="centered-button">
-          <el-button type="primary" size="small" @click="showCompanyInfo">查看公司信息</el-button>
-        </div>
+<!--        <div class="centered-button">-->
+<!--         -->
+<!--        </div>-->
       </div>
 
       <div class="user-info">
@@ -43,40 +45,108 @@
       </div>
     </div>
     <el-dialog title="公司信息" :visible.sync="dialogVisible" width="50%">
-      <div>
-        <p><strong>公司名称:</strong> {{ stockCompany.stockName }}</p>
-        <p><strong>股票类型:</strong> {{ stockCompany.stockType }}</p>
-        <p><strong>公司简介:</strong> {{ stockCompany.companyIntro }}</p>
-        <p><strong>市值:</strong> {{ stockCompany.market }}</p>
-        <p><strong>流通市值:</strong> {{ stockCompany.floatMarket }}</p>
-        <p><strong>上市日期:</strong> {{ stockCompany.listingDate }}</p>
-        <p><strong>总股本:</strong> {{ stockCompany.shares }}</p>
-        <p><strong>流通股本:</strong> {{ stockCompany.floatShares }}</p>
+      <div class="company-info-dialog">
+        <div class="company-info-item">
+          <p><strong>公司名称:</strong> {{ stockCompany.stockName }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>股票类型:</strong> {{ stockCompany.stockType }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>公司简介:</strong> {{ stockCompany.companyIntro }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>市值:</strong> {{ stockCompany.market }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>流通市值:</strong> {{ stockCompany.floatMarket }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>上市日期:</strong> {{ stockCompany.listingDate }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>总股本:</strong> {{ stockCompany.shares }}</p>
+        </div>
+        <div class="company-info-item">
+          <p><strong>流通股本:</strong> {{ stockCompany.floatShares }}</p>
+        </div>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">关闭</el-button>
-      </span>
+      <el-button @click="dialogVisible = false" type="primary" size="medium">关闭</el-button>
+    </span>
+    </el-dialog>
+    <el-dialog title="股票预测信息" :visible.sync="predictionVisible" width="50%">
+      <div class="dialog-container">
+        <!-- 左侧内容 -->
+        <div class="prediction-left-section">
+          <!-- 投资建议 -->
+          <div class="prediction-investment-advice">
+            <p><strong>投资建议：</strong> {{ stockInfo.investment || '暂无建议' }}</p>
+          </div>
+          <!-- 预测信息表格 -->
+          <el-table :data="paginatedPrediction" style="width: 100%" stripe border>
+            <el-table-column prop="formattedDate" label="时间" width="200"></el-table-column>
+            <el-table-column prop="price" label="预测价格" width="150"></el-table-column>
+          </el-table>
+          <!-- 分页器 -->
+          <el-pagination
+              background
+              layout="prev, pager, next"
+              :current-page="currentPage"
+              :page-size="pageSize"
+              :total="formattedPrediction.length"
+              @current-change="handlePageChange">
+          </el-pagination>
+        </div>
+
+        <!-- 右侧聊天界面 -->
+        <div class="prediction-right-section">
+          <div class="prediction-chat-container">
+            <el-divider content-position="left"><span style="font-size: 18px; font-weight: bold">智股预测AI</span></el-divider>
+            <div class="prediction-chat-messages">
+              <div
+                  v-for="(msg, index) in chatMessages"
+                  :key="index"
+                  :class="{'prediction-user-message': msg.isUser, 'prediction-assistant-message': !msg.isUser}">
+                {{ msg.text }}
+              </div>
+            </div>
+            <el-input
+                v-model="userInput"
+                placeholder="请输入消息..."
+                @keyup.enter="sendMessage">
+            </el-input>
+            <el-button type="primary" @click="sendMessage" style="display: block; margin: 10px auto 0;">发送</el-button>
+          </div>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+    <el-button @click="predictionVisible = false" type="primary" size="medium">关闭</el-button>
+  </span>
     </el-dialog>
     <!-- ChatGPT 聊天界面 -->
     <div class="chat-container">
-      <el-divider content-position="left"><span style="font-size: 18px; font-weight: bold">聊天助手</span></el-divider>
+      <el-divider content-position="left"><span style="font-size: 18px; font-weight: bold">智股模拟AI</span></el-divider>
       <div class="chat-messages">
         <div v-for="(msg, index) in chatMessages" :key="index" :class="{'user-message': msg.isUser, 'assistant-message': !msg.isUser}">
           {{ msg.text }}
         </div>
       </div>
       <el-input v-model="userInput" placeholder="请输入消息..." @keyup.enter="sendMessage"></el-input>
-      <el-button type="primary" @click="sendMessage">发送</el-button>
+      <el-button type="primary" @click="sendMessage" style="display: block; margin: 10px auto 0;">发送</el-button>
     </div>
   </div>
 </template>
 
 <script>
+import dayjs from "dayjs"; // 时间格式化库，需要安装 dayjs
 import navMenu from "@/components/navmenu.vue";
 import vueKline from "vue-kline";
 import { userStockInfo } from "@/api/user";
 import { buyStock, sellStock } from "@/api/trade";
-import { stockHistory } from "@/api/stock";
+import {prediction, stockHistory} from "@/api/stock";
+import router from "@/router";
+import {Message} from "element-ui";
 
 export default {
   name: "stockPage",
@@ -86,7 +156,13 @@ export default {
   },
   data() {
     return {
+      currentPage: 1, // 当前页码
+      pageSize: 8, // 每页显示条数
+      formattedPrediction: [], // 格式化后的预测数据
+      paginatedPrediction: [],
+      prediction:[],
       dialogVisible:false,
+      predictionVisible:false,
       stockId: 0,
       stockIdStr: null,
       buyNum: 1,
@@ -110,16 +186,35 @@ export default {
       userInput: "",     // 用户输入
     }
   },
-  created() {
-    this.stockIdStr = this.$route.params.id;
-    this.stockId = parseInt(this.$route.params.id);
-    this.getInfo();
-    this.getStockInfo();
+  async created() {
+    try {
+      this.stockIdStr = this.$route.params.id;
+      this.stockId = parseInt(this.$route.params.id);
+      await this.getInfo();
+      await this.getStockInfo();
+    } catch (error) {
+      Message({
+        message: 'Please log in',
+        type: 'warning',
+      });
+      router.push("/login");
+    }
+
   },
   mounted() {
     this.refreshKlineData(300000);
   },
   methods: {
+    handlePageChange(page) {
+      this.currentPage = page;
+      const startIndex = (page - 1) * this.pageSize;
+      const endIndex = page * this.pageSize;
+      this.paginatedPrediction = this.formattedPrediction.slice(startIndex, endIndex);
+    },
+    // 初始化分页
+    initPagination() {
+      this.handlePageChange(1); // 默认展示第一页
+    },
     requestData() {
       this.isLoading = true;
       stockHistory(this.stockIdStr).then(res => {
@@ -160,19 +255,59 @@ export default {
       console.log(option)
       this.requestData();
     },
-    getStockInfo() {
+    async  getStockInfo() {
+      // prediction(this.stockIdStr).then(res =>{
+      //   if(res.msg==='用户未登录')
+      //     router.push('/login');
+      //   this.prediction=res.data.prediction;
+      // })
       stockHistory(this.stockIdStr).then(res => {
+        if(res.msg==='用户未登录')
+          router.push('/login');
         this.stockInfo = res.data.stockSummary;
         this.stockCompany=res.data.stockSummary.stockCompany;
 
       })
     },
+    showPrediction() {
+      // 点击查看预测信息时显示模态框，并确保数据已加载
+      this.predictionVisible = true;
+      this.getPredictionData();
+    },
+    async getPredictionData() {
+      try {
+        const res = await prediction(this.stockIdStr);
+        if (res.msg === "用户未登录") {
+          router.push("/login");
+          return;
+        }
+        this.prediction = res.data.prediction;
+
+        // 格式化时间字段
+        this.formattedPrediction = this.prediction.map(item => ({
+          ...item,
+          formattedDate: dayjs(item.time).format("YYYY-MM-DD"), // 使用 dayjs 格式化时间
+        }));
+        this.initPagination();
+      } catch (err) {
+        return;
+      }
+    },
+    // showPrediction() {
+    //   prediction(this.stockIdStr).then(res =>{
+    //     if(res.msg==='用户未登录')
+    //       router.push('/login');
+    //     this.prediction=res.data.prediction;
+    //   })
+    //   // 点击查看公司信息时显示模态框
+    //   this.predictionVisible = true;
+    // },
     showCompanyInfo() {
       // 点击查看公司信息时显示模态框
       this.dialogVisible = true;
     },
-    getInfo() {
-      userStockInfo(this.stockIdStr).then(res => {
+    async getInfo() {
+      const res=await userStockInfo(this.stockIdStr);
         this.tradeInfo = res.data.tradeInfo.length === 0 ? {
           userName: res.data.userName,
           balance: res.data.balance,
@@ -184,7 +319,6 @@ export default {
             earn: 0,
           }]
         } : res.data;
-      })
     },
     async sendMessage() {
       this.chatMessages.push({text: this.userInput, isUser: true});
@@ -300,6 +434,10 @@ export default {
   //   }
 
     async buy() {
+      if (this.buyNum % 100 !== 0) {
+        this.$message({message:'买入数量必须是100的整数倍', type: 'warning'});
+        return;
+      }
       try {
         const response=await buyStock(this.stockId, this.buyNum);
         if(response.code!==200){
@@ -314,6 +452,10 @@ export default {
       }
     },
     async sell() {
+      if (this.sellNum % 100 !== 0) {
+        this.$message({message:'卖出数量必须是100的整数倍', type: 'warning'});
+        return;
+      }
       try {
         const response=await sellStock(this.stockId, this.sellNum);
         if(response.code!==200){
@@ -419,6 +561,125 @@ export default {
 .centered-button {
   text-align: center;
   margin-top: 20px;
+}
+.company-info-btn {
+  margin-left: 500px; /* 你可以根据需要调整此数值 */
+}
+
+.company-info-dialog {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+}
+
+.company-info-item {
+  margin-bottom: 15px; /* 增加条目之间的间距 */
+  font-size: 16px;
+}
+
+.company-info-item strong {
+  color: #333; /* 强调字体颜色 */
+}
+
+.dialog-footer {
+  text-align: center;
+}
+
+.el-button {
+  width: 100px;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+/* 美化对话框样式 */
+.investment-advice {
+  background-color: #f5f7fa;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 1px solid #dcdfe6;
+}
+
+/* 表格样式调整 */
+.el-table {
+  margin-top: 10px;
+}
+
+
+
+.dialog-footer {
+  text-align: center;
+}
+
+.dialog-container {
+  display: flex;
+  gap: 20px; /* 左右区域间的间距 */
+}
+
+.prediction-left-section {
+  flex: 1; /* 左侧占 2 份宽度 */
+}
+
+.prediction-right-section {
+  flex: 1; /* 右侧占 1 份宽度 */
+  border-left: 1px solid #e4e4e4; /* 增加分割线 */
+  padding-left: 20px;
+}
+
+.prediction-chat-container {
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.prediction-chat-messages {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.prediction-user-message {
+  text-align: right;
+  background-color: #e1f5fe;
+  padding: 5px;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.prediction-assistant-message {
+  text-align: left;
+  background-color: #ffe0b2;
+  padding: 5px;
+  border-radius: 5px;
+  margin: 5px 0;
+}
+
+.prediction-investment-advice {
+  background-color: #f5f7fa;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 1px solid #dcdfe6;
+}
+
+.el-table th {
+  background-color: #f0f9ff;
+  color: #333;
+  font-weight: bold;
+  text-align: center;
+}
+
+.el-table td {
+  text-align: center;
 }
 
 

@@ -1,216 +1,211 @@
 <template>
-    <div>
-        <nav-menu></nav-menu>
-        <div class="user-dashboard">
-            <!-- 账户信息 -->
-            <div class="account-overview">
-                <h2>{{ account.username }}</h2>
-                <div>
-                    <p>总资产: {{ account.balance }} 元</p>
-                    <p :class="priceClass(account.profit)">总收益: {{ account.profit }} 元</p>
-                </div>
-            </div>
-
-            <!-- 持仓信息 -->
-            <div class="stock-holdings">
-                <h2>持仓信息</h2>
-                <el-table :data="account.tradeInfo" class="stock-name-link" @row-click="goDetail">
-                    <el-table-column prop="stockName" label="股票名称"></el-table-column>
-                    <el-table-column prop="quantity" label="当前持仓量"></el-table-column>
-                  <el-table-column prop="price" label="当前价格"></el-table-column>
-                  <el-table-column label="总市值">
-                    <template slot-scope="scope">
-                      {{ (scope.row.price * scope.row.quantity).toFixed(2) }} 元
-                    </template>
-                  </el-table-column>
-                  <el-table-column prop="cost" label="总投入"></el-table-column>
-                  <el-table-column prop="earn" label="获利"></el-table-column>
-
-                    <el-table-column label="总盈亏">
-                        <template slot-scope="scope">
-                            <!-- 根据盈亏动态设置样式 -->
-                            <span :class="priceClass(scope.row.profit)">
-                                {{ (scope.row.profit).toFixed(2) }} 元
-                            </span>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </div>
-
-            <!-- 交易记录 -->
-<!--            <div class="transaction-history">-->
-<!--                <h2>交易记录</h2>-->
-<!--                <el-collapse>-->
-<!--                    <el-collapse-item v-for="(transaction, index) in transactions" :title="transaction.stockName"-->
-<!--                        :key="index">-->
-<!--                        <div>-->
-<!--                            <p>股票代码：{{ transaction.stockId }}</p>-->
-<!--                            <p>类型: {{ showType(transaction.tradeType) }}</p>-->
-<!--                            <p>价格: {{ transaction.tradePrice }}</p>-->
-<!--                            <p>数量: {{ transaction.tradeQuantity }}</p>-->
-<!--                            <p>交易时间: {{ transaction.tradeDate }}</p>-->
-<!--                        </div>-->
-<!--                    </el-collapse-item>-->
-<!--                </el-collapse>-->
-<!--            </div>-->
+  <div>
+    <nav-menu></nav-menu>
+    <div class="user-dashboard">
+      <!-- 账户信息 -->
+      <div class="account-overview">
+        <h2>{{ account.username }}</h2>
+        <div>
+          <p>初始资金: 500000 元</p>
+          <p>总资产: {{ account.balance }} 元</p>
+          <p>总投入: {{ totalInvestment }} 元</p>
+          <p>总市值: {{ totalMarketValue }} 元</p>
+          <p :class="priceClass(account.profit)">总收益: {{ account.profit.toFixed(2) }} 元</p>
         </div>
+      </div>
+
+      <!-- 持仓信息 -->
+      <div class="stock-holdings">
+        <h2>持仓信息</h2>
+
+<!--        &lt;!&ndash; 搜索框和按钮 &ndash;&gt;-->
+<!--        <div style="margin-bottom: 20px; display: flex; align-items: center;">-->
+<!--          <el-input-->
+<!--              v-model="searchName"-->
+<!--              placeholder="输入股票名称"-->
+<!--             -->
+<!--              clearable-->
+<!--          ></el-input>-->
+<!--          <el-input-->
+<!--              v-model="searchCode"-->
+<!--              placeholder="输入股票代码"-->
+<!--              style="margin-right: 10px; width: 200px;"-->
+<!--              clearable-->
+<!--          ></el-input>-->
+<!--          <el-button @click="searchStocks" type="primary">搜索</el-button>-->
+<!--        </div>-->
+
+        <el-table
+            :data="paginatedTradeInfo"
+            class="stock-name-link"
+            @row-click="goDetail"
+        >
+          <el-table-column prop="stockName" label="股票名称"></el-table-column>
+<!--          <el-table-column prop="stockCode" label="股票代码"></el-table-column>-->
+          <el-table-column prop="quantity" label="当前持仓量"></el-table-column>
+          <el-table-column prop="price" label="当前价格"></el-table-column>
+          <el-table-column label="总市值">
+            <template slot-scope="scope">
+              {{ (scope.row.price * scope.row.quantity).toFixed(2) }} 元
+            </template>
+          </el-table-column>
+          <el-table-column prop="cost" label="总投入"></el-table-column>
+          <el-table-column prop="earn" label="获利"></el-table-column>
+
+          <el-table-column label="总盈亏">
+            <template slot-scope="scope">
+              <span :class="priceClass(scope.row.profit)">
+                {{ (scope.row.profit).toFixed(2) }} 元
+              </span>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页 -->
+        <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            :total="filteredTradeInfo.length"
+            layout="total, sizes, prev, pager, next, jumper"
+        ></el-pagination>
+      </div>
     </div>
+  </div>
 </template>
 
 <script>
 import { userInfo, userTradeHistory } from "@/api/user";
 import navMenu from "@/components/navmenu.vue";
+
 export default {
-    name: "userPage",
-    components: {
-        'nav-menu': navMenu,
-    },
-    data() {
-        return {
-            account: {
-                username: '用户名',
-                balance: 100000, // 总资产
-                profit: 2000,    // 总收益
-                tradeInfo: [
-                    {
-                        "stockId": 1,
-                        "stockName": "美团",
-                        "cost": 8000,
-                        "quantity": 40,
-                        "price": 25,
-                        "value": 10000,
-                        "earn": 1000,
-                        "profit": 3000
-                    },
-                    {
-                        "stockId": 2,
-                        "stockName": "腾讯",
-                        "cost": 9000,
-                        "quantity": 20,
-                        "price": 40,
-                        "value": 8000,
-                        "earn": 0,
-                        "profit": -1000
-                    }
-                ],
-            },
-            transactions: [
-                {
-                    "userId": 3,
-                    "stockId": 5,
-                    "stockName": "阿里巴巴",
-                    "tradeType": 0,
-                    "tradeQuantity": 5,
-                    "tradePrice": 192.0,
-                    "tradeDate": "2024-10-11 22:23:52"
-                },
-                {
-                    "userId": 3,
-                    "stockId": 6,
-                    "stockName": "百度",
-                    "tradeType": 0,
-                    "tradeQuantity": 6,
-                    "tradePrice": 155.5,
-                    "tradeDate": "2024-10-11 22:45:25"
-                },
-                {
-                    "userId": 3,
-                    "stockId": 7,
-                    "stockName": "腾讯控股",
-                    "tradeType": 0,
-                    "tradeQuantity": 7,
-                    "tradePrice": 360.5,
-                    "tradeDate": "2024-10-11 22:46:22"
-                },
-                {
-                    "userId": 3,
-                    "stockId": 8,
-                    "stockName": "京东",
-                    "tradeType": 0,
-                    "tradeQuantity": 8,
-                    "tradePrice": 73.5,
-                    "tradeDate": "2024-10-11 22:46:30"
-                },
-                {
-                    "userId": 3,
-                    "stockId": 9,
-                    "stockName": "美团",
-                    "tradeType": 0,
-                    "tradeQuantity": 9,
-                    "tradePrice": 250.5,
-                    "tradeDate": "2024-10-11 22:46:36"
-                },
-                {
-                    "userId": 3,
-                    "stockId": 10,
-                    "stockName": "小米",
-                    "tradeType": 0,
-                    "tradeQuantity": 10,
-                    "tradePrice": 23.9,
-                    "tradeDate": "2024-10-11 22:47:44"
-                },
-                {
-                    "userId": 3,
-                    "stockId": 5,
-                    "stockName": "阿里巴巴",
-                    "tradeType": 0,
-                    "tradeQuantity": 3,
-                    "tradePrice": 181.0,
-                    "tradeDate": "2024-10-11 23:13:09"
-                }
-            ],
-        };
-    },
-    created() {
-        this.getUserInfo();
-        //this.getUser();
-        this.getHistory();
-    },
-    methods: {
-        priceClass(profit) { //涨跌颜色
-            if (profit < 0) {
-                return 'price-down';
-            } else {
-                return 'price-up';
-            }
-        },
-        showType(type) {//0买入1，卖出
-            if (type == 0) {
-                return '买入'
-            }
-            else if (type == 1) {
-                return '卖出'
-            }
-        },
-        getUserInfo() { //获取用戶全部信息
-            userInfo().then(response => {
-                this.account = response.data;
-            })
-        },
-      goDetail(row) {
-        this.$router.push({ path: `/stock/${row.stockId}` });
+  name: "userPage",
+  components: {
+    'nav-menu': navMenu,
+  },
+  data() {
+    return {
+      account: {
+        username: '用户名',
+        balance: 100000, // 总资产
+        profit: 2000,    // 总收益
+        tradeInfo: [
+          {
+            stockId: 1,
+            stockName: "美团",
+            stockCode: "03690",
+            cost: 8000,
+            quantity: 40,
+            price: 25,
+            value: 10000,
+            earn: 1000,
+            profit: 3000,
+          },
+          {
+            stockId: 2,
+            stockName: "腾讯",
+            stockCode: "00700",
+            cost: 9000,
+            quantity: 20,
+            price: 40,
+            value: 8000,
+            earn: 0,
+            profit: -1000,
+          }
+        ],
       },
-        // getUser() { //获取用戶简要信息
-        //     user().then(response => {
-        //         this.account = response.data;
-        //     })
-        // },
-        getHistory() { //交易历史
-            userTradeHistory().then(response => {
-                this.transactions = response.data.history;
-            })
-        }
+      transactions: [
+        // Some transaction data
+      ],
+      searchName: "",  // 搜索关键字
+      searchCode: "",  // 搜索关键字
+      currentPage: 1,   // 当前页
+      pageSize: 10,     // 每页显示条数
+    };
+  },
+  computed: {
+    // 总市值计算
+    totalMarketValue() {
+      return this.account.tradeInfo.reduce((total, stock) => {
+        return total + stock.price * stock.quantity;
+      }, 0).toFixed(2);
+    },
+    // 总投入计算
+    totalInvestment() {
+      return this.account.tradeInfo.reduce((total, stock) => {
+        return total + stock.cost;
+      }, 0).toFixed(2);
+    },
+    // 根据搜索条件过滤后的持仓信息
+    filteredTradeInfo() {
+      return this.account.tradeInfo.filter(stock => {
+        return (
+            stock.stockName.includes(this.searchName) ||
+            stock.stockCode.includes(this.searchCode)
+        );
+      });
+    },
+    // 分页后的持仓信息
+    paginatedTradeInfo() {
+      const startIndex = (this.currentPage - 1) * this.pageSize;
+      const endIndex = this.currentPage * this.pageSize;
+      return this.filteredTradeInfo.slice(startIndex, endIndex);
     }
-}
+  },
+  methods: {
+    priceClass(profit) {
+      if (profit < 0) {
+        return 'price-down';
+      } else {
+        return 'price-up';
+      }
+    },
+    goDetail(row) {
+      this.$router.push({ path: `/stock/${row.stockId}` });
+    },
+    // 当前页数改变
+    handleCurrentChange(page) {
+      this.currentPage = page;
+    },
+    // 每页显示条数改变
+    handleSizeChange(size) {
+      this.pageSize = size;
+    },
+    searchStocks() {
+      // 基于 stockName 和 stockCode 进行过滤
+      this.filteredTradeInfo = this.account.tradeInfo.filter(stock => {
+        const nameMatch = stock.stockName.toLowerCase().includes(this.searchName.toLowerCase());
+        const codeMatch = stock.stockCode && stock.stockCode.includes(this.searchCode);
+        return nameMatch && codeMatch;
+      });
+      // 重置分页
+      this.currentPage = 1;
+    },
+    getUserInfo() {
+      userInfo().then(response => {
+        this.account = response.data;
+      });
+    },
+    getHistory() {
+      userTradeHistory().then(response => {
+        this.transactions = response.data.history;
+      });
+    }
+  },
+  created() {
+    this.getUserInfo();
+    this.getHistory();
+  }
+};
 </script>
 
 <style scoped>
 .user-dashboard {
-    display: flex;
-    flex-wrap: wrap;
-    padding: 20px;
-    justify-content: center;
-
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20px;
+  justify-content: center;
 }
 .el-table th {
   border-bottom: none !important;
@@ -219,34 +214,23 @@ export default {
   text-decoration: none !important;
 }
 .account-overview {
-    background-color: #f0f0f0;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    min-width: 80%;
-    max-width: 80%;
+  background-color: #f0f0f0;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  min-width: 80%;
+  max-width: 80%;
 }
-
 .stock-holdings {
-    margin-top: 20px;
-    min-width: 80%;
-    max-width: 80%;
+  margin-top: 20px;
+  min-width: 80%;
+  max-width: 80%;
 }
-
-.transaction-history {
-    margin-top: 20px;
-    min-width: 80%;
-    max-width: 80%;
-}
-
 .price-down {
-    color: #01b301;
-    /* 当 changePercent 是负数时，价格显示绿色 */
+  color: #01b301; /* 当 profit 是负数时，价格显示绿色 */
 }
-
 .price-up {
-    color: red;
-    /* 当 changePercent 是正数时，价格显示红色 */
+  color: red; /* 当 profit 是正数时，价格显示红色 */
 }
 .stock-name-link {
   color: #409EFF;

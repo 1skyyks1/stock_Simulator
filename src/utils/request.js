@@ -31,7 +31,7 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
     (response) => {
-        if (response.status===401){
+        if (response.status===401||response.msg==='用户未登录'){
             router.push('/login');
         }
         if (response.status===500){
